@@ -2,52 +2,46 @@ pipeline {
     agent any
 
     environment {
-        // Replace with your Docker Hub username (all lowercase)
-        DOCKER_IMAGE = 'hopespaccy/my_web_app'
-        // Replace with your Jenkins Docker Hub credentials ID
-        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
+        DOCKER_IMAGE = 'hopespaccy/my_web_app'           // Your Docker Hub repo
+        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // Jenkins Docker Hub credentials
     }
 
     stages {
 
-        // 1️⃣ Checkout code from GitHub
+        // Step 1: Checkout your code from GitHub
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
 
-        // 2️⃣ Build Docker image
+        // Step 2: Build Docker image from Dockerfile
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Use 'def' to avoid Jenkins memory leak warning
                     def dockerImage = docker.build("${DOCKER_IMAGE}:latest")
-                    // Save reference for push stage
-                    env.DOCKER_IMAGE_ID = dockerImage.id
                 }
             }
         }
 
-        // 3️⃣ Push Docker image to Docker Hub
+        // Step 3: Push Docker image to Docker Hub
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_CREDENTIALS_ID}") {
-                        def dockerImage = docker.image("${DOCKER_IMAGE}:latest")
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
                         dockerImage.push('latest')
                     }
                 }
             }
         }
 
-        // 4️⃣ Deploy to local Docker host
+        // Step 4: Deploy Docker container locally
         stage('Deploy to Local Docker Host') {
             steps {
                 script {
                     sh '''
                     docker rm -f my-web-app || true
-                    docker run -d --name my-web-app -p 8080:80 ${DOCKER_IMAGE}:latest
+                    docker run -d --name my-web-app -p 8080:80 hopespaccy/my_web_app:latest
                     '''
                 }
             }
@@ -57,10 +51,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Pipeline completed successfully!"
+            echo "✅ Deployment successful! Visit http://localhost:8080"
         }
         failure {
-            echo "❌ Pipeline failed. Check above for errors."
+            echo "❌ Deployment failed!"
         }
     }
 }
