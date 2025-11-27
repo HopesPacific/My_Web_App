@@ -13,29 +13,24 @@ pipeline {
         stage('Build') {
             steps {
                 echo "Building the project..."
-
-                // Linux/Mac commands:
-                //sh 'ls -la'
-
-                //For Windows Jenkins agents:
-                bat 'dir'
+                bat 'dir'     // Windows command
             }
         }
 
         stage('Test') {
             steps {
                 echo "Running tests..."
-                // Add test commands here, e.g:
-                // sh 'npm test'
-                // sh './mvnw test'
+                // Add your test commands here, for example:
+                // bat 'npm test'
+                // bat 'mvn test'
             }
         }
 
         stage('Deploy') {
             steps {
                 echo "Deploying..."
-                // Add your deployment script here, e.g:
-                // sh './deploy.sh'
+                // Add your deployment script here, for example:
+                // bat 'deploy.bat'
             }
         }
     }
