@@ -17,7 +17,7 @@ pipeline {
                 // Linux/Mac commands:
                 //sh 'ls -la'
 
-                For Windows Jenkins agents:
+                //For Windows Jenkins agents:
                 bat 'dir'
             }
         }
