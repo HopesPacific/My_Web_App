@@ -15,10 +15,10 @@ pipeline {
                 echo "Building the project..."
 
                 // Linux/Mac commands:
-                sh 'ls -la'
+                //sh 'ls -la'
 
-                // For Windows Jenkins agents:
-                // bat 'dir'
+                For Windows Jenkins agents:
+                bat 'dir'
             }
         }
 
