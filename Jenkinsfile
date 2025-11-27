@@ -3,7 +3,7 @@ pipeline {
 
     // ← Environment variables go at the top, inside pipeline but outside stages
     environment {
-    DOCKER_IMAGE = 'hopespaccy/my-web-app'
+    DOCKER_IMAGE = 'hopespaccy/node_web_app'
     DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
 }
 
