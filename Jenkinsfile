@@ -1,47 +1,62 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_IMAGE = 'dockerhub_username/my-web-app'  // Replace with your Docker Hub username
+        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'  // Jenkins credential ID
+    }
+
     stages {
 
-        stage('Clone') {
+        stage('Checkout') {
             steps {
-                echo "📥 Cloning repository..."
+                echo "Checking out code from GitHub..."
                 checkout scm
-
-                // Show files after cloning
-                echo "📂 Repository content:"
-                bat 'dir'
             }
         }
 
-        stage('Build') {
+        stage('Build Docker Image') {
             steps {
-                echo "🔧 Building the project..."
-
-                // Show file details (Windows)
-                bat 'dir /A /Q'
+                echo "Building Docker image..."
+                script {
+                    dockerImage = docker.build("${DOCKER_IMAGE}:latest")
+                }
             }
         }
 
-        stage('Test') {
+        stage('Push to Docker Hub') {
             steps {
-                echo "🧪 Running tests..."
-
-                // Dummy visible test output
-                bat 'echo Running sample tests...'
-                bat 'echo Test 1 passed'
-                bat 'echo Test 2 passed'
+                echo "Pushing Docker image to Docker Hub..."
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
+                        dockerImage.push('latest')
+                    }
+                }
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy to Local Docker Host') {
             steps {
-                echo "🚀 Deploying..."
-
-                // Simulate deployment output
-                bat 'echo Deploying application...'
-                bat 'echo Deployment completed successfully.'
+                echo "Deploying Docker container locally..."
+                sh '''
+                docker rm -f my-web-app || true
+                docker run -d --name my-web-app -p 8080:80 ${DOCKER_IMAGE}:latest
+                docker ps -a
+                '''
             }
+        }
+
+    }
+
+    post {
+        always {
+            echo "Pipeline finished. Check above logs for output."
+        }
+        success {
+            echo "✅ Pipeline completed successfully!"
+        }
+        failure {
+            echo "❌ Pipeline failed. Check logs to troubleshoot."
         }
     }
 }
