@@ -2,8 +2,10 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'hopespaccy/my_web_app'             // Docker Hub repo name (all lowercase)
-        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'  // Jenkins Credential ID
+        // Replace with your Docker Hub username (all lowercase)
+        DOCKER_IMAGE = 'hopespaccy/my_web_app'
+        // Replace with your Jenkins Docker Hub credentials ID
+        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
     }
 
     stages {
@@ -15,38 +17,50 @@ pipeline {
             }
         }
 
-        // 2️⃣ Build Docker Image
+        // 2️⃣ Build Docker image
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build the Docker image once and store in a variable
-                    env.DOCKER_TAG = "${DOCKER_IMAGE}:latest"
-                    dockerImage = docker.build(env.DOCKER_TAG)
+                    // Use 'def' to avoid Jenkins memory leak warning
+                    def dockerImage = docker.build("${DOCKER_IMAGE}:latest")
+                    // Save reference for push stage
+                    env.DOCKER_IMAGE_ID = dockerImage.id
                 }
             }
         }
 
-        // 3️⃣ Push Docker Image to Docker Hub
+        // 3️⃣ Push Docker image to Docker Hub
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', DOCKER_CREDENTIALS_ID) {
+                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_CREDENTIALS_ID}") {
+                        def dockerImage = docker.image("${DOCKER_IMAGE}:latest")
                         dockerImage.push('latest')
                     }
                 }
             }
         }
 
-        // 4️⃣ Deploy Docker Container
-        stage('Deploy') {
+        // 4️⃣ Deploy to local Docker host
+        stage('Deploy to Local Docker Host') {
             steps {
                 script {
-                    echo "Deploying Docker container..."
-                    bat "docker stop my_web_app || true"
-                    bat "docker rm my_web_app || true"
-                    bat "docker run -d -p 8080:80 --name my_web_app ${DOCKER_TAG}"
+                    sh '''
+                    docker rm -f my-web-app || true
+                    docker run -d --name my-web-app -p 8080:80 ${DOCKER_IMAGE}:latest
+                    '''
                 }
             }
+        }
+
+    }
+
+    post {
+        success {
+            echo "✅ Pipeline completed successfully!"
+        }
+        failure {
+            echo "❌ Pipeline failed. Check above for errors."
         }
     }
 }
