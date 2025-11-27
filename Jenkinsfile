@@ -3,19 +3,17 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'hopespaccy/my_web_app'      // Replace with your Docker Hub repo
-        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'  // Jenkins credential ID
+        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'  // Jenkins Docker Hub credentials
     }
 
     stages {
 
-        // 1️⃣ Checkout code from Git
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
 
-        // 2️⃣ Build Docker image
         stage('Build Docker Image') {
             steps {
                 script {
@@ -24,7 +22,6 @@ pipeline {
             }
         }
 
-        // 3️⃣ Push Docker image to Docker Hub
         stage('Push to Docker Hub') {
             steps {
                 script {
@@ -35,16 +32,26 @@ pipeline {
             }
         }
 
-        // 4️⃣ Deploy to Local Docker Host
+        // ✅ Deploy locally (optional)
         stage('Deploy to Local Docker Host') {
             steps {
                 sh '''
-                # Remove old container if exists
                 docker rm -f my_web_app || true
-
-                # Run new container
                 docker run -d --name my_web_app -p 8080:80 hopespaccy/my_web_app:latest
                 '''
+            }
+        }
+
+        // ✅ Deploy remotely via SSH
+        stage('Deploy to Remote Docker Host') {
+            steps {
+                sshagent(['remote-host-ssh-key']) {  // Jenkins SSH credential ID
+                    sh '''
+                    ssh user@remote-host "docker pull hopespaccy/my_web_app:latest"
+                    ssh user@remote-host "docker rm -f my-web-app || true"
+                    ssh user@remote-host "docker run -d --name my-web-app -p 8080:80 hopespaccy/my_web_app:latest"
+                    '''
+                }
             }
         }
 
