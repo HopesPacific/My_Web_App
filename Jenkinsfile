@@ -1,23 +1,19 @@
 pipeline {
     agent any
 
-    // ← Environment variables go at the top, inside pipeline but outside stages
     environment {
-    DOCKER_IMAGE = 'hopespaccy/My_Web_App'
-    DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
-}
-
+        DOCKER_IMAGE = 'hopespaccy/my_web_app'  // all lowercase
+        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
+    }
 
     stages {
 
-        // Checkout your code from GitHub
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
 
-        // Build Docker image from Dockerfile
         stage('Build Docker Image') {
             steps {
                 script {
@@ -26,7 +22,6 @@ pipeline {
             }
         }
 
-        // ← Push to Docker Hub using credentials
         stage('Push to Docker Hub') {
             steps {
                 script {
